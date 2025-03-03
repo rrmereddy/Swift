@@ -13,5 +13,6 @@ FInished the tictactoe functionality and made a partially playable game on the t
 # Sunday, Feb 9 (4Queen)
 Finsihed the logic of the 4Queens game
 
-# Monday, Mar 3 (CarMax, SwiftUI)
+# Monday, Mar 3 (CarMax, TicTacToe(Flowchart))
 Created a SwiftUI version of CarMax, where you can filter cars based on their properties
+Added a visualized flow of the TicTacToe game
