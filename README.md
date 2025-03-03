@@ -11,4 +11,7 @@ Created CarMax data stuctures in classs and continued learning more about Swift
 FInished the tictactoe functionality and made a partially playable game on the terminal
 
 # Sunday, Feb 9 (4Queen)
-Finsihed htelogic of the 4Queens game
+Finsihed the logic of the 4Queens game
+
+# Monday, Mar 3 (CarMax, SwiftUI)
+Created a SwiftUI version of CarMax, where you can filter cars based on their properties
