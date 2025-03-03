@@ -22,7 +22,7 @@ func placeQueen(_ board: String, _ row: Int, _ col: Int, _ validQueenPlace: [[In
 }
 
 func checkQueenSafe(_ board: String, _ row: Int, _ col: Int, _ validQueenPlace: [[Int]]) -> Bool {
-    //checks wether the queen can be placed
+    //checks whether the queen can be placed
     
     for int in validQueenPlace{
         // two queen can't be placed in the same column or row
