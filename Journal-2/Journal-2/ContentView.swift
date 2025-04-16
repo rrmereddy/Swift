@@ -24,6 +24,25 @@ struct DigitPrediction {
     let confidence: Float
 }
 
+#if canImport(UIKit)
+struct UIKitCanvasViewRepresentable: UIViewRepresentable {
+    @Binding var canvasView: CanvasView?
+    
+    func makeUIView(context: Context) -> CanvasView {
+        let view = CanvasView(frame: .zero)
+        view.backgroundColor = .black
+        DispatchQueue.main.async {
+            self.canvasView = view
+        }
+        return view
+    }
+    
+    func updateUIView(_ uiView: CanvasView, context: Context) {
+        // No-op
+    }
+}
+#endif
+
 struct DrawingGameView: View {
     @State private var targetNumber: [Int] = []
     @State private var currentDigitIndex = 0
@@ -37,6 +56,10 @@ struct DrawingGameView: View {
     
     // Model related
     let model: VNCoreMLModel
+    
+    #if canImport(UIKit)
+    @State private var canvasView: CanvasView? = nil
+    #endif
     
     init() {
         // Load the MNIST model
@@ -81,6 +104,12 @@ struct DrawingGameView: View {
                 .font(.headline)
             
             // Drawing canvas
+            #if canImport(UIKit)
+            UIKitCanvasViewRepresentable(canvasView: $canvasView)
+                .frame(width: 300, height: 300)
+                .background(Color.black)
+                .border(Color.gray)
+            #else
             Canvas { context, size in
                 // Draw completed lines
                 for line in lines {
@@ -133,6 +162,7 @@ struct DrawingGameView: View {
                         }
                     }
             )
+            #endif
             
             // Predictions display
             if !predictions.isEmpty {
@@ -157,9 +187,13 @@ struct DrawingGameView: View {
             // Controls
             HStack {
                 Button("Clear") {
+                    #if canImport(UIKit)
+                    canvasView?.clearCanvas()
+                    #else
                     lines = []
                     currentLine = nil
                     predictions = []
+                    #endif
                 }
                 .buttonStyle(.bordered)
                 
@@ -197,90 +231,51 @@ struct DrawingGameView: View {
         }
     }
     
-    private func recognizeDrawing() {
-        guard !lines.isEmpty else { return }
-        
     #if canImport(UIKit)
-        // Convert drawing to 28x28 grayscale UIImage
-        guard let mnistImage = renderDrawingToMNISTImage(lines: lines),
-              let cgImage = mnistImage.cgImage else {
-            print("Failed to render MNIST image")
+    private func getCanvasImage() -> UIImage? {
+        guard let canvas = canvasView else { return nil }
+        return UIImage(view: canvas)
+    }
+    #endif
+    
+    private func recognizeDrawing() {
+        #if canImport(UIKit)
+        guard let image = getCanvasImage(), let cgImage = image.cgImage else {
+            print("Failed to get image from canvas")
             return
         }
-        
-        // Preprocess and predict
         let imageRequestHandler = VNImageRequestHandler(cgImage: cgImage, options: [:])
-        
         let request = VNCoreMLRequest(model: model) { request, error in
             if let error = error {
                 print("Vision ML request error: \(error)")
                 return
             }
-            
             guard let results = request.results as? [VNClassificationObservation] else {
                 print("Unexpected result type from VNCoreMLRequest")
                 return
             }
-            
-            // Process the results
             self.predictions = results.prefix(3).map { observation in
-                // Convert label to digit (assuming model outputs labels like "0", "1", etc.)
                 if let digit = Int(observation.identifier) {
                     return DigitPrediction(digit: digit, confidence: observation.confidence)
                 } else {
-                    // Fallback if label isn't a digit
                     return DigitPrediction(digit: -1, confidence: observation.confidence)
                 }
             }.sorted { $0.confidence > $1.confidence }
-            
-            // Check if the best prediction matches the target digit
             if let bestPrediction = self.predictions.first, bestPrediction.digit == self.targetNumber[self.currentDigitIndex] {
                 self.showSuccess = true
             }
         }
-        
         do {
             try imageRequestHandler.perform([request])
         } catch {
             print("Failed to perform image recognition: \(error)")
         }
-    #else
-        fatalError("MNIST image recognition is only supported on iOS (UIKit).")
-    #endif
+        #else
+        // Fallback for non-iOS
+        guard !lines.isEmpty else { return }
+        // ... existing code for SwiftUI Canvas ...
+        #endif
     }
-    
-    #if canImport(UIKit)
-    // Helper function to render lines to a 28x28 grayscale UIImage (iOS only)
-    private func renderDrawingToMNISTImage(lines: [Line]) -> UIImage? {
-        let size = CGSize(width: 28, height: 28)
-        let renderer = UIGraphicsImageRenderer(size: size)
-        let image = renderer.image { ctx in
-            UIColor.white.setFill()
-            ctx.fill(CGRect(origin: .zero, size: size))
-            // Assume your canvas is 300x300
-            let scaleX = size.width / 300
-            let scaleY = size.height / 300
-            for line in lines {
-                let path = UIBezierPath()
-                if let first = line.points.first {
-                    path.move(to: CGPoint(x: first.x * scaleX, y: first.y * scaleY))
-                    for point in line.points.dropFirst() {
-                        path.addLine(to: CGPoint(x: point.x * scaleX, y: point.y * scaleY))
-                    }
-                }
-                path.lineWidth = line.lineWidth * scaleX
-                UIColor.black.setStroke()
-                path.stroke()
-            }
-        }
-        return image
-    }
-    #else
-    // macOS is not supported for this feature
-    private func renderDrawingToMNISTImage(lines: [Line]) -> Any? {
-        fatalError("MNIST image rendering is only supported on iOS (UIKit).")
-    }
-    #endif
     
     private func moveToNextDigit() {
         if currentDigitIndex < targetNumber.count - 1 {

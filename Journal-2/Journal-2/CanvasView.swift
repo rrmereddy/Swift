@@ -6,6 +6,7 @@
 //  Copyright © 2017 Brian Advent. All rights reserved.
 //
 
+#if canImport(UIKit)
 import UIKit
 
 class CanvasView: UIView {
@@ -94,7 +95,4 @@ extension UIImage {
         self.init(cgImage: image!.cgImage!)
     }
 }
-
-#Preview{
-    CanvasView()
-}
+#endif
