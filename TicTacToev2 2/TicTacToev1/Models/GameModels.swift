@@ -1,35 +1,56 @@
 //
 //  GameModels.swift
-//  TicTacToeV1
+//  TicTacToev1
 //
-//  Created by Ritin Mereddy on 2/10/25.
+//  Created by Ritin Mereddy on 2/19/24.
 //
 
 import SwiftUI
 
-
-enum GameType {
+enum GameType{
     case single, bot, peer, undetermined
-
-    var description: String {
-        switch self {
+    
+    var description:String{
+        switch self{
+            //lower case self is a current instance of the structure
+            //upper case Self is the the structure itself
         case .single:
-            return "Share your device with a friend to play."
+            return "Share your device and play against a friend."
+            
         case .bot:
-            return "Play with a computer."
+            return "Play againat the device."
+            
         case .peer:
-            return "Invite somebody to play with you."
+            return "Invite someone near you with the app to play."
+            
         case .undetermined:
             return ""
         }
     }
+    
 }
 
 enum GamePiece: String{
-    case X, O
-    
-    var image: Image{
+    case x, o
+    var image:Image{
         Image(self.rawValue)
+    }
+}
+
+
+struct Player{
+    let gamePiece:GamePiece
+    var name:String
+    var moves:[Int] = []
+    var isCurrent = false
+    
+    var isWinner:Bool{
+        for moves in Moves.winningMoves{
+            if moves.allSatisfy(self.moves.contains){
+                return true
+            }
+        }
+        return false
     }
 }
 
@@ -56,24 +77,4 @@ enum Moves{
     
     
 }
-/*
- 
-*/
-struct Player{
-    var name: String
-    let gamePiece: GamePiece
-    var isCurrent: Bool = true
-    var moves: [Int] = []
-    
-    
-    
-    var isWinner: Bool {
-        for moves in Moves.winningMoves {
-            if moves.allSatisfy(self.moves.contains){
-                return true
-            }
-        }
-        
-        return false
-    }
-}
+

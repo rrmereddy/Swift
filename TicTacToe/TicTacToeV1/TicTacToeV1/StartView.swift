@@ -24,6 +24,7 @@ struct StartView: View {
     @FocusState private var focus: Bool
     
     @State private var startGame: Bool = false
+    @StateObject private var gameService = GameService()
     
     var body: some View {
         VStack{
@@ -64,7 +65,6 @@ struct StartView: View {
             if gameType != .peer && gameType != .undetermined {
                 Button("Start Game"){
                     // set up the game - RM
-                    
                     focus = false
                     startGame.toggle()
                 }
@@ -79,13 +79,13 @@ struct StartView: View {
         .padding()
         .navigationTitle("Tic-Tac-Toe")
         .fullScreenCover(isPresented: $startGame){
-            
+            GameView()
+                .environmentObject(gameService)
         }
     }
 }
 
 #Preview {
-    NavigationStack{
-        StartView()
-    }
+    StartView()
+        .environmentObject(GameService())
 }

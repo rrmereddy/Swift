@@ -16,14 +16,15 @@ struct GameSquare{
             return player.gamePiece.image
         }
         else {
-            return Image("none")
+            return Image("None")
         }
     }
     
     static var reset:[GameSquare]{
         var squares:[GameSquare] = []
         
-        for index in 0..<9{
+        // 4x4 grid
+        for index in 0..<16{
             squares.append(GameSquare(id: index))
         }
         return squares

@@ -90,6 +90,17 @@ struct GameView: View {
             
             Spacer()
         }
+        .toolbar{
+            ToolbarItem(placement: .topBarTrailing) {
+                Button("End Game"){
+                    dismiss()
+                }.buttonStyle(.bordered)
+            }
+        }// end of toolbar
+        .navigationTitle("TicTacToe")
+        .onAppear{
+            game.reset()
+        }
     }
 }
 
