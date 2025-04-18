@@ -12,6 +12,7 @@ import Vision
 import UIKit
 #endif
 
+
 struct DigitPrediction {
     let digit: Int
     let confidence: Float
@@ -37,6 +38,8 @@ struct UIKitCanvasViewRepresentable: UIViewRepresentable {
 #endif
 
 struct DrawingGameView: View {
+    @Binding var showCameraView: Bool
+    @Binding var resetDrawing: Bool
     @State private var targetNumber: [Int] = []
     @State private var currentDigitIndex = 0
     @State private var lines = [Line]()
@@ -62,7 +65,9 @@ struct DrawingGameView: View {
     @State private var canvasView: CanvasView? = nil
     #endif
     
-    init() {
+    init(showCameraView: Binding<Bool>, resetDrawing: Binding<Bool>) {
+        self._showCameraView = showCameraView
+        self._resetDrawing = resetDrawing
         // Load the MNIST model
         do {
             let modelConfig = MLModelConfiguration()
@@ -271,7 +276,9 @@ struct DrawingGameView: View {
                     HStack(spacing: 20) {
                         Button(action: {
                             #if canImport(UIKit)
-                            canvasView?.clearCanvas()
+                            if let canvas = canvasView {
+                                canvas.clearCanvas()
+                            }
                             #else
                             lines = []
                             currentLine = nil
@@ -324,11 +331,11 @@ struct DrawingGameView: View {
             .padding()
         }
         .alert("Verification Complete!", isPresented: $gameCompleted) {
-            Button("New Verification") {
-                startNewGame()
+            Button("Continue to Camera") {
+                showCameraView = true
             }
         } message: {
-            Text("You passed all verification steps!")
+            Text("You passed all verification steps! Now let's verify you're not a robot.")
         }
         .alert("Verification failed: You are a bot!", isPresented: $verificationFailed) {
             Button("Try Again") {
@@ -336,6 +343,12 @@ struct DrawingGameView: View {
             }
         } message: {
             Text("Please try again.")
+        }
+        .onChange(of: resetDrawing) { newValue in
+            if newValue {
+                startNewGame()
+                resetDrawing = false
+            }
         }
     }
     
@@ -440,9 +453,24 @@ struct Line: Identifiable {
 }
 
 struct ContentView: View {
+    @State private var showCameraView = false
+    @State private var resetDrawing = false
+    
     var body: some View {
         NavigationView {
-            DrawingGameView()
+            if showCameraView {
+                ScavengerCameraView(showCameraView: $showCameraView, resetDrawing: $resetDrawing)
+                    .navigationBarBackButtonHidden(true)
+                    .toolbar {
+                        ToolbarItem(placement: .navigationBarLeading) {
+                            Button("Back to Drawing") {
+                                showCameraView = false
+                            }
+                        }
+                    }
+            } else {
+                DrawingGameView(showCameraView: $showCameraView, resetDrawing: $resetDrawing)
+            }
         }
     }
 }
