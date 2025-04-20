@@ -14,7 +14,7 @@ class CanvasView: UIView {
     // Properties for line drawing
     var lineColor:UIColor!
     var lineWidth:CGFloat!
-    var path:UIBezierPath!
+    var path:UIBezierPath?
     var touchPoint:CGPoint!
     var startingPoint:CGPoint!
     
@@ -25,24 +25,26 @@ class CanvasView: UIView {
         // standard settings for our line
         lineColor = UIColor.white
         lineWidth = 10
+        path = UIBezierPath()
     }
     
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         // get the touch position when user starts drawing
-        let touch = touches.first
-        startingPoint = touch?.location(in: self)
+        guard let touch = touches.first else { return }
+        startingPoint = touch.location(in: self)
     }
     
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
         // get the next touch point as the user draws
-        let touch = touches.first
-        touchPoint = touch?.location(in: self)
+        guard let touch = touches.first else { return }
+        touchPoint = touch.location(in: self)
+
         
         // create path originating from the starting point to the next point the user reached
         path = UIBezierPath()
-        path.move(to: startingPoint)
-        path.addLine(to: touchPoint)
+        path?.move(to: startingPoint)
+        path?.addLine(to: touchPoint)
         
         // setting the startingPoint to the previous touchpoint
         // this updates while the user draws
@@ -55,7 +57,7 @@ class CanvasView: UIView {
         
         let shapeLayer = CAShapeLayer()
         // the shape layer is used to draw along the already created path
-        shapeLayer.path = path.cgPath
+        shapeLayer.path = path?.cgPath
         
         // adjusting the shape to our wishes
         shapeLayer.strokeColor = lineColor.cgColor
@@ -69,7 +71,7 @@ class CanvasView: UIView {
     }
     
     func clearCanvas() {
-        path.removeAllPoints()
+        path?.removeAllPoints()
         self.layer.sublayers = nil
         self.setNeedsDisplay()
     }
